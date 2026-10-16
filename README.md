@@ -1,3 +1,5 @@
-# Bài Kiểm Tra 02
-### Họ và tên: Lê Ngọc Quyền
+## Bài Kiểm Tra 02
+
+### Lê Ngọc Quyền
 ### Mã sinh viên: 24810310259
+### Lớp: D19CNPM3

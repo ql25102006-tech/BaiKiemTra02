@@ -1,12 +1,11 @@
 using System;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Bai03_SupermarketMDI
 {
     public partial class frmMain : Form
     {
-        private bool _isClosingConfirmed = false;
+        private bool isClosingConfirmed = false;
 
         public frmMain()
         {
@@ -15,128 +14,141 @@ namespace Bai03_SupermarketMDI
 
         private void frmMain_Load(object? sender, EventArgs e)
         {
-            sslStatus.Text = "Trạng thái: Sẵn sàng làm việc.";
+            sslCurrentUser.Text = "Người dùng: Lê Ngọc Quyền (MSSV: 24810310259 - D19CNPM3)";
+            sslStatus.Text = "Trạng thái: Sẵn sàng làm việc";
         }
 
-        /// <summary>
-        /// Scenario A: Kiểm tra xem Form con đã mở hay chưa.
-        /// Nếu đã mở thì Activate() mang Form đó lên trước.
-        /// Nếu chưa thì tạo mới Instance, gán MdiParent = this và hiển thị (Show()).
-        /// </summary>
-        public T ShowOrActivateMdiChild<T>() where T : Form, new()
+        #region Scenario A: Kiến trúc Điều hướng MDI
+        // Khi click vào menu tương ứng:
+        // - Kiểm tra xem Form con đã mở hay chưa.
+        // - Nếu đã mở thì Activate() mang Form đó lên trước.
+        // - Nếu chưa thì tạo mới Instance, gán MdiParent = this và hiển thị (Show()).
+        public void MoFormCon(Type loaiForm)
         {
-            // Kiểm tra trong danh sách MdiChildren hiện tại
-            var existingChild = MdiChildren.OfType<T>().FirstOrDefault();
+            Form? formCon = null;
 
-            if (existingChild != null)
+            // Duyệt danh sách các Form con đang mở trong Form cha MDI
+            foreach (Form f in this.MdiChildren)
             {
-                if (existingChild.WindowState == FormWindowState.Minimized)
+                if (f.GetType() == loaiForm)
                 {
-                    existingChild.WindowState = FormWindowState.Normal;
+                    formCon = f;
+                    break;
                 }
-                existingChild.Activate();
-                existingChild.BringToFront();
-                return existingChild;
+            }
+
+            if (formCon != null)
+            {
+                // Nếu đã mở thì mang lên phía trước
+                if (formCon.WindowState == FormWindowState.Minimized)
+                {
+                    formCon.WindowState = FormWindowState.Normal;
+                }
+                formCon.Activate();
+                formCon.BringToFront();
             }
             else
             {
-                var newChild = new T
-                {
-                    MdiParent = this,
-                    StartPosition = FormStartPosition.CenterScreen
-                };
-                newChild.Show();
-                return newChild;
+                // Nếu chưa mở thì tạo mới instance và gán MdiParent
+                Form fMoi = (Form)Activator.CreateInstance(loaiForm)!;
+                fMoi.MdiParent = this;
+                fMoi.StartPosition = FormStartPosition.CenterScreen;
+                fMoi.Show();
             }
         }
+        #endregion
 
-        /// <summary>
-        /// Phương thức cập nhật thanh tiến trình ProgressBar trên StatusStrip của Form Cha cho các tác vụ nặng
-        /// </summary>
-        public void SetProgress(int percent, bool visible = true, string statusText = "")
+        #region Cập nhật ProgressBar trên StatusStrip của Form Cha (Dùng chung cho tác vụ nặng)
+        public void CapNhatTienTrinh(int phanTram, bool hienThi = true, string thongBao = "")
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action(() => SetProgress(percent, visible, statusText)));
+                this.Invoke(new Action(() => CapNhatTienTrinh(phanTram, hienThi, thongBao)));
                 return;
             }
 
-            tspbMainProgress.Visible = visible;
-            tspbMainProgress.Value = Math.Max(0, Math.Min(100, percent));
+            tspbMainProgress.Visible = hienThi;
+            tspbMainProgress.Value = Math.Max(0, Math.Min(100, phanTram));
 
-            if (!string.IsNullOrEmpty(statusText))
+            if (!string.IsNullOrEmpty(thongBao))
             {
-                sslStatus.Text = statusText;
+                sslStatus.Text = thongBao;
             }
         }
 
-        public void ResetProgress(string statusText = "Trạng thái: Sẵn sàng")
+        public void DatLaiTienTrinh(string thongBao = "Trạng thái: Sẵn sàng")
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action(() => ResetProgress(statusText)));
+                this.Invoke(new Action(() => DatLaiTienTrinh(thongBao)));
                 return;
             }
 
             tspbMainProgress.Visible = false;
             tspbMainProgress.Value = 0;
-            sslStatus.Text = statusText;
+            sslStatus.Text = thongBao;
         }
 
+        public void SetProgress(int percent, bool visible = true, string statusText = "") => CapNhatTienTrinh(percent, visible, statusText);
+        public void ResetProgress(string statusText = "Trạng thái: Sẵn sàng") => DatLaiTienTrinh(statusText);
+        #endregion
+
+        #region Xử lý Menu
         private void menuProductCatalog_Click(object? sender, EventArgs e)
         {
-            ShowOrActivateMdiChild<frmProductCatalog>();
+            MoFormCon(typeof(frmProductCatalog));
         }
 
         private void menuStockManager_Click(object? sender, EventArgs e)
         {
             MessageBox.Show(
-                "Tính năng Quản lý Nhập xuất hàng hóa đang được đồng bộ cùng Danh mục sản phẩm.\nĐang mở cửa sổ Danh mục sản phẩm...",
+                "Tính năng Quản lý Nhập xuất hàng hóa đang liên kết với Danh mục sản phẩm.\nĐang mở giao diện Danh mục sản phẩm...",
                 "Thông báo",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
             );
-            ShowOrActivateMdiChild<frmProductCatalog>();
+            MoFormCon(typeof(frmProductCatalog));
         }
 
         private void menuAsyncReport_Click(object? sender, EventArgs e)
         {
-            ShowOrActivateMdiChild<frmAsyncReport>();
+            MoFormCon(typeof(frmAsyncReport));
         }
 
         private void menuCascade_Click(object? sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.Cascade);
+            this.LayoutMdi(MdiLayout.Cascade);
         }
 
         private void menuTileHorizontal_Click(object? sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.TileHorizontal);
+            this.LayoutMdi(MdiLayout.TileHorizontal);
         }
 
         private void menuTileVertical_Click(object? sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.TileVertical);
+            this.LayoutMdi(MdiLayout.TileVertical);
         }
 
         private void menuLogout_Click(object? sender, EventArgs e)
         {
-            var result = MessageBox.Show(
+            DialogResult dr = MessageBox.Show(
                 "Bạn có muốn đăng xuất khỏi phiên làm việc hiện tại?",
                 "Xác nhận đăng xuất",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );
 
-            if (result == DialogResult.Yes)
+            if (dr == DialogResult.Yes)
             {
-                // Đóng tất cả form con
-                foreach (var child in MdiChildren)
+                // Đóng tất cả các form con đang mở
+                foreach (Form child in this.MdiChildren)
                 {
                     child.Close();
                 }
+
                 sslCurrentUser.Text = "Người dùng: Đã đăng xuất";
-                sslStatus.Text = "Vui lòng đăng nhập lại để tiếp tục.";
+                sslStatus.Text = "Trạng thái: Vui lòng đăng nhập lại để tiếp tục.";
                 MessageBox.Show("Đã đăng xuất thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -148,24 +160,25 @@ namespace Bai03_SupermarketMDI
 
         private void frmMain_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (_isClosingConfirmed)
+            if (isClosingConfirmed)
                 return;
 
-            var result = MessageBox.Show(
-                "Bạn có chắc chắn muốn đóng Hệ thống Quản lý Siêu thị?",
+            DialogResult dr = MessageBox.Show(
+                "Bạn có chắc chắn muốn thoát khỏi Hệ thống Quản lý Siêu thị?",
                 "Xác nhận thoát hệ thống",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );
 
-            if (result == DialogResult.No)
+            if (dr == DialogResult.No)
             {
                 e.Cancel = true;
             }
             else
             {
-                _isClosingConfirmed = true;
+                isClosingConfirmed = true;
             }
         }
+        #endregion
     }
 }

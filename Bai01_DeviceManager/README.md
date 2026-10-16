@@ -4,7 +4,7 @@
 - **Mã số sinh viên:** 24810310259 
 - **Lớp:** D19CNPM3 
 - **Tên môn học:** Lập trình C# / Windows Forms 
-- **Tên bài tập:** Bài 1: DeviceManager
+- **Tên bài tập:** Bài 1: Quản lý danh mục thiết bị điện tử (Cơ bản & Data Binding)
 --- 
 ## KẾT QUẢ THỰC HÀNH 
 ### 1. Ảnh màn hình Giao diện chính 

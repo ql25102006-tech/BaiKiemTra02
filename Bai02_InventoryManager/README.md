@@ -4,7 +4,7 @@
 - **Mã số sinh viên:** 24810310259 
 - **Lớp:** D19CNPM3 
 - **Tên môn học:** Lập trình C# / Windows Forms 
-- **Tên bài tập:** Bài 2: InventoryManager
+- **Tên bài tập:** Bài 2: Quản lý kho và xuất báo cáo tổng hợp (System Dialogs)
 --- 
 ## KẾT QUẢ THỰC HÀNH 
 ### 1. Ảnh màn hình Giao diện chính 
